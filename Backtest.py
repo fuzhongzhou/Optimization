@@ -21,8 +21,6 @@ pool = pool[["Wells Fargo C&B Large Cap Value A", "Metropolitan West Total Retur
 pool.head()
 
 
-# In[53]:
-
 
 def back_test(start, end):
     initial_capital = 10000
@@ -30,9 +28,9 @@ def back_test(start, end):
     
     def one_period_trade(t, capital, weight):
         price = pool.iloc[t]
-        position = capital*weight/np.array(pool.iloc[t])
-        if t+cycle<end:   #if within back test period 
-            capital = position.dot(pool.iloc[t+cycle])
+        position = capital * weight / np.array(pool.iloc[t])
+        if t + cycle < end:   #if within back test period
+            capital = position.dot(pool.iloc[t + cycle])
         else:             #if not
             capital = position.dot(pool.iloc[end])
         return capital
@@ -45,15 +43,16 @@ def back_test(start, end):
     
     #records for wealth over time
     cumulative_value = pd.Series({pool.index[t]:wealth})
-    
-    while(t<end):
+
+    # at time t, change position, compute the return between (t, t + cycle)
+    while t < end:
         '''
         Hundreds of codes for strategy which generate the new weight
         
         先跑一遍，把各个时刻的weight都记下来，然后back test直接按着记好的信号搞就可以
         '''
         wealth = one_period_trade(t, wealth, weight)
-        cumulative_value[pool.index[t]] = wealth
+        cumulative_value[pool.index[t + cycle]] = wealth
         t += cycle
         
     return cumulative_value

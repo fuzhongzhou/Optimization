@@ -5,6 +5,8 @@ from scipy.optimize import minimize, LinearConstraint
 
 
 def MeanVariance(ER, Sig, rf):
+    ER = np.array(ER).reshape((-1, 1))
+    Sig = np.array(Sig)
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
     A = l.T.dot(inv(Sig)).dot(ER)
@@ -13,13 +15,15 @@ def MeanVariance(ER, Sig, rf):
 
     w_mkt = inv(Sig).dot(ER - rf * l) / (A - C * rf)
     mu = ER.T.dot(w_mkt)
-    lam = 1 / ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l)) # (mu - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
+    lam = (mu - rf) / w_mkt.T.dot(Sig).dot(w_mkt) #1 / ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l)) # (mu - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
     # w_capm = lam * inv(Sig).dot(ER - rf * l)
 
     return w_mkt, lam
 
 
 def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
+
+    Sig = np.array(Sig)
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)

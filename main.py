@@ -7,6 +7,7 @@ Sig = np.array([[1, 0.1, 0.1, 0.1],
                 [0.1, 1, 0.1, 0.1],
                 [0.1, 0.1, 1, 0.1],
                 [0.1, 0.1, 0.1, 1]])
+Sig /= 10
 
 ER = np.array([0.01, 0.02, 0.03, 0.025]).reshape((-1, 1))
 rf = 0.01
@@ -26,7 +27,7 @@ confidence = np.array([[0.5],
 
 
 w_mkt, lam_mkt = MeanVariance(ER, Sig, rf)
-
 print(BlackLitterman(w_mkt, Sig, lam_mkt, rf, tau, P, Q))
+print(w_mkt)
 
-
+print(MeanVarianceConstraint(Sig, ER, rf, lam_mkt))

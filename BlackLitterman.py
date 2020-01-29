@@ -3,14 +3,6 @@ import pandas as pd
 from numpy.linalg import inv
 from scipy.optimize import minimize, LinearConstraint
 
-######################### testing inputs, will be replaced
-Sig = np.array([[1, 0.1, 0.1, 0.1],
-                [0.1, 1, 0.1, 0.1],
-                [0.1, 0.1, 1, 0.1],
-                [0.1, 0.1, 0.1, 1]])
-
-ER = np.array([0.01, 0.02, 0.03, 0.025]).reshape((-1, 1))
-rf = 0.01
 
 def MeanVariance(ER, Sig, rf):
     # compute market portfolio
@@ -26,29 +18,13 @@ def MeanVariance(ER, Sig, rf):
 
     return w_mkt, lam
 
-# input from riskparity
-w_blInput = np.array([0.1, 0.4, 0.3, 0.2]).reshape((-1, 1))
 
-w_blInput, lam_mkt = MeanVariance(ER, Sig, rf)
-########################
-
-# Black Litterman Parameters
-tau = 0.05  # 1 / n, n is # of observation
-
-# View parameters
-P = np.array([[0, 0, 1, -1],
-              [-2, 1, 1, 0]])
-Q = np.array([[0.01],
-              [0.005]])
-confidence = np.array([[0.5],
-                       [0.4]])
-
-def BlackLitterman(w_blInput, ER, Sig, tau, P, Q):
+def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
 
     Omeg = np.diag((P.dot(Sig).dot(P.T) * tau).diagonal())
 
     # Computation
-    Pi = lam_mkt * Sig.dot(w_blInput)
+    Pi = lam * Sig.dot(w_blInput)
 
     ER_BL_1 = inv(tau * Sig) + P.T.dot(inv(Omeg)).dot(P)
     ER_BL_2 = inv(tau * Sig).dot(Pi) + P.T.dot(inv(Omeg)).dot(Q)
@@ -62,8 +38,8 @@ def BlackLitterman(w_blInput, ER, Sig, tau, P, Q):
 
 
     # New mean variance analysis
-    w_BL, lam_BL = MeanVariance(Sig_BL, ER_BL, rf)  # new weight
-    w_BL100, lam_BL100 = MeanVariance(Sig_BL100, ER_BL100, rf) # 100 confidence weight
+    w_BL, lam_BL = MeanVariance(ER_BL, Sig_BL, rf)  # new weight
+    w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf) # 100 confidence weight
 
     '''
     remain to be completed
@@ -77,8 +53,7 @@ def BlackLitterman(w_blInput, ER, Sig, tau, P, Q):
             departure_tmp = w_tmp - w_blInput
     '''
     implied_confidence = np.abs(w_BL - w_blInput).sum() / np.abs(w_BL100 - w_blInput).sum()
-
-
+    return w_BL
 
 
 def MeanVarianceConstraint(Sig, ER, rf):
@@ -91,7 +66,7 @@ def MeanVarianceConstraint(Sig, ER, rf):
     def objfunc(x):
         x = x.T
         l = np.ones(shape=(x.shape[0], 1))
-        return -(x.T.dot(ER - rf * l) - 1/lam_mkt * x.T.dot(Sig).dot(x) / 2)
+        return -(x.T.dot(ER - rf * l) - 1/lam * x.T.dot(Sig).dot(x) / 2)
 
     # params of optimizer
     x0 = np.zeros(ER.shape)
@@ -103,6 +78,5 @@ def MeanVarianceConstraint(Sig, ER, rf):
     print(re)
 
     # equity 的比重要保证 subject to
-    pass
 
 

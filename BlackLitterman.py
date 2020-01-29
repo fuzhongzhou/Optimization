@@ -33,7 +33,7 @@ w_blInput = np.array([0.1, 0.4, 0.3, 0.2]).reshape((-1, 1))
 
 # Black Litterman Parameters
 
-tau = 0.05
+tau = 0.05 # 1 / n n is # of observation
 
 # View parameters
 
@@ -46,16 +46,17 @@ Omeg = np.array([[1]])
 
 
 # Computation
-
 Pi = lam * Sig.dot(w_blInput)
 
 ER_BL_1 = inv(tau * Sig) + P.T.dot(Omeg).dot(P)
 ER_BL_2 = inv(tau * Sig).dot(ER) + P.T.dot(Omeg).dot(Q)
 ER_BL = inv(ER_BL_1).dot(ER_BL_2)
-
-mu_BL100 = Pi + tau * S
-
 Sig_BL = inv(ER_BL_1)
+
+# 100 percent confidence
+mu_BL100 = Pi + tau * Sig.dot(P.T).dot(inv(P.dot(tau * Sig).dot(P.T))).dot(Q - P.dot(Pi))
+Sig_BL100 = inv(inv(tau * Sig) + P.T.dot(np.zeros(shape=Omeg.shape)).dot(P))
+
 
 
 # New mean variance analysis

@@ -5,8 +5,10 @@ from scipy.optimize import minimize, LinearConstraint
 
 
 def MeanVariance(ER, Sig, rf):
+
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
+
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
     A = l.T.dot(inv(Sig)).dot(ER)
@@ -24,6 +26,7 @@ def MeanVariance(ER, Sig, rf):
 def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
 
     Sig = np.array(Sig)
+    w_blInput = np.array(w_blInput).reshape((-1, 1))
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
@@ -55,11 +58,11 @@ def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
             w_tmp = inv(lam_mkt * Sig).dot(ER_tmp)
             departure_tmp = w_tmp - w_blInput
     '''
-    w_BL = inv(lam * Sig_BL).dot(ER_BL)
-    w_BL100 = inv(lam * Sig_BL100).dot(ER_BL100)
+    #w_BL = inv(lam * Sig_BL).dot(ER_BL)
+    #w_BL100 = inv(lam * Sig_BL100).dot(ER_BL100)
 
     implied_confidence = np.abs(w_BL - w_blInput).sum() / np.abs(w_BL100 - w_blInput).sum()
-
+    print(lam, w_BL, w_BL.sum(), ER_BL)
     return w_BL, implied_confidence
 
 

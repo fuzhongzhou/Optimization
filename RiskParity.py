@@ -39,12 +39,7 @@ def risk_parity_weight(cov_mat, risk_prop, equity_prop):
     wts = pd.Series(index=cov_mat.index, data=res['x'])
     wts = wts / wts.sum() * 1.0
 
-    # risk contribution
-    var = (wts.T).dot(cov_mat).dot(wts)
-    risk_contribution = wts * (cov_mat.dot(wts)) / var
-    risk_contribution = [sum(risk_contribution[0:3]), sum(risk_contribution[3:5]), sum(risk_contribution[5:9])]
-
-    return wts, risk_contribution
+    return wts
 
 
 
@@ -57,6 +52,12 @@ def standardize(tmp):
         tmp = (tmp - mu)/sigma
     return tmp   
 
+
+def RiskContribution(wts, cov_mat):
+    var = (wts.T).dot(cov_mat).dot(wts)
+    risk_contribution = np.array(wts * (cov_mat.dot(wts)) / var)
+    risk_contribution = [risk_contribution[0:3].sum(), risk_contribution[3:5].sum(), risk_contribution[5:9].sum()]
+    return risk_contribution
 
 
 if __name__ == "__main__":

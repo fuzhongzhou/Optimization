@@ -58,7 +58,7 @@ def standardize(tmp):
 def RiskContribution(wts, cov_mat):
     var = (wts.T).dot(cov_mat).dot(wts)
     risk_contribution = np.array(wts * (cov_mat.dot(wts)) / var)
-    risk_contribution = [risk_contribution[0:3].sum(), risk_contribution[3:5].sum(), risk_contribution[5:9].sum()]
+    risk_contribution = [risk_contribution[0], risk_contribution[1], sum(risk_contribution[2:4]), risk_contribution[4]]
     return risk_contribution
 
 

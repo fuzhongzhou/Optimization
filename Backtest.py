@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 pool = pd.read_csv("pool.csv")
 pool["Date"] = pd.to_datetime(pool["Date"])
 pool = pool.set_index("Date")
+pool = pool[["Wells Fargo C&B Large Cap Value A", "Metropolitan West Total Return Bd I",
+            "Vanguard Real Estate ETF", "iShares Gold Trust"]]
 pool.head()
 
 
@@ -35,8 +37,8 @@ def back_test(start, end):
             capital = position.dot(pool.iloc[end])
         return capital
     
-    #WARNING:just for test, check using 9th fund price
-    weight = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+    #WARNING:just for test, check using 4th fund price
+    weight = np.array([0, 0, 0, 1])
     
     t = start
     wealth = initial_capital

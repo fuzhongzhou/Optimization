@@ -47,6 +47,8 @@ def back_test(start, end):
     while(t<end):
         '''
         Hundreds of codes for strategy which generate the new weight
+        
+        先跑一遍，把各个时刻的weight都记下来，然后back test直接按着记好的信号搞就可以
         '''
         wealth = one_period_trade(t, wealth, weight)
         cumulative_value[pool.index[t]] = wealth

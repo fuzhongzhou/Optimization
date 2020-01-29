@@ -62,7 +62,6 @@ def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
     #w_BL100 = inv(lam * Sig_BL100).dot(ER_BL100)
 
     implied_confidence = np.abs(w_BL - w_blInput).sum() / np.abs(w_BL100 - w_blInput).sum()
-    print(lam, w_BL, w_BL.sum(), ER_BL)
     return w_BL, implied_confidence
 
 
@@ -74,12 +73,13 @@ def MeanVarianceConstraint(Sig, ER, rf, lam):
 
     # object function
     def objfunc(x):
-        x = x.T
+        x = np.array(x).T
         l = np.ones(shape=(x.shape[0], 1))
         return -(x.T.dot(ER - rf * l) - lam * x.T.dot(Sig).dot(x) / 2)
 
     # params of optimizer
-    x0 = np.zeros(ER.shape)
+    x0 = np.ones(ER.shape)
+    x0 /= x0.sum() # start with equally weighted
     bnds = tuple((None,None) for _ in x0)
     cons = (#{'type':'eq', 'fun': lambda x: sum(x) - 1},
             {'type': 'ineq', 'fun': lambda x: x})
@@ -88,6 +88,9 @@ def MeanVarianceConstraint(Sig, ER, rf, lam):
     re = minimize(objfunc, x0)
     return re
 
-    # equity 的比重要保证 subject to
+    '''
+    updating:
+    need to add constraints to weight of risky assets, and form a mean variance analysis
+    '''
 
 

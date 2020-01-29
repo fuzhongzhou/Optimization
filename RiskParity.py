@@ -6,7 +6,6 @@ import scipy as sp
 from scipy.optimize import minimize
 
 
-
 def risk_parity_weight(cov_mat, risk_prop, equity_prop):    
     #risk parity weight
     
@@ -69,17 +68,11 @@ if __name__ == "__main__":
     pool.head()
 
 
-    # In[10]:
-
-
     cov = pool.cov()
     target = [0.7, 0.2, 0.1] # target risk contribution of equity, bond, alternative
     equity = 0.8 # equity proportion limit
     wts = risk_parity_weight(cov, target, equity)
     wts
-
-
-    # In[11]:
 
 
     var = (wts.T).dot(cov).dot(wts)

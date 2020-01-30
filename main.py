@@ -32,7 +32,7 @@ weight_rp = weight.copy(deep=True)
 weight_mv = weight.copy(deep=True)
 
 output = 0
-
+equity = 0.8
 
 for d in trade_idx:
     print(d)
@@ -43,9 +43,15 @@ for d in trade_idx:
 
     ################ Discretionary Parameters
     # risk parity params
-    target = [0.7, 0.198, 0.1, 0.002]  # target risk contribution of equity, bond, alternative, liquidity
-    equity = 0.8  # equity proportion limit
-    liquidity_interval = (0.05, 0.1)  # liquidity proportion interval
+    equity = 0.8 - 0.0125*cycle/12  # equity proportion limit
+    target_equity = (exp(equity)/2 - 0.2)*0.9
+    target_alternative = (exp(equity)/2 - 0.2)*0.1
+    target_bond = (1-(exp(equity)/2 - 0.2))*0.95
+    target_liquidity = (1-(exp(equity)/2 - 0.2))*0.05
+    liquidity_top += 0.0025*cycle/12
+    liquidity_bot = liquidity_top/2
+    target = [target_equity, target_alternative, target_bond, target_liquidity]  # target risk contribution of equity, bond, alternative, liquidity
+    liquidity_interval = (liquidity_bot, liquidity_top)  # liquidity proportion interval
 
     # black litterman params
     rf = 0.0 / 12

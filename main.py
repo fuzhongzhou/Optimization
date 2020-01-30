@@ -126,6 +126,13 @@ ax.plot(result_eq, label='Equally weighted')
 ax.plot(result_rp, label='Risk parity')
 ax.plot(result_mv, label='Mean variance')
 ax.plot(result_bl, label='Risk adjusted black litterman')
+ax.legend()
+date_str = list(result_bl.index)
+date_tick = [datetime.datetime.strptime(str(i), '%m/%d/%Y') for i in list(result_bl.index)]
+ax.set_xticks(date_str)
+plt.xticks(np.arange(0, 45, 5.0))
+plt.show()
+
 
 names = ['equally weighted', 'risk parity', 'mean variance', 'black litterman']
 results = [result_eq, result_rp, result_mv, result_bl]
@@ -136,15 +143,6 @@ for name, result in zip(names, results):
     table.loc[name] = [SR, MD]
 print(table)
 
-plt.plot(result_eq)
-plt.plot(result_rp)
-plt.plot(result_mv)
-plt.plot(result_bl)
 
-ax.legend()
 
-date_str = list(result_bl.index)
-date_tick = [datetime.datetime.strptime(str(i), '%m/%d/%Y') for i in list(result_bl.index)]
-ax.set_xticks(date_str)
 
-plt.show()

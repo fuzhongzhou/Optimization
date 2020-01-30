@@ -36,7 +36,7 @@ def back_test(df, start, end, commission_fee):
 
 
     initial_capital = 100
-    cycle = 4 #transfer frequency, yearly: 12, quaterly: 4
+    cycle = 3 #transfer frequency, yearly: 12, quaterly: 3
     
     def one_period_trade(t, capital, weight):
         weight = np.array(weight)                                                #target weight

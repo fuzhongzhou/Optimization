@@ -66,8 +66,6 @@ if __name__ == "__main__":
     pool=pd.read_csv("pool.csv", encoding='utf-8')[:-1]
     pool = pool.set_index("Date")
     pool = pool.fillna(pool.mean())
-    pool = pool[["Wells Fargo C&B Large Cap Value A", "Metropolitan West Total Return Bd I",
-                "Vanguard Real Estate ETF", "iShares Gold Trust", "DGS1MO"]]
     for i in pool.columns:
         pool[i] = pool[i]/pool[i].iloc[0]
     pool.head()

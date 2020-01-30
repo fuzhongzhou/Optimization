@@ -27,7 +27,7 @@ n = pool_raw.shape[1]
 #####################
 win = 18
 winv = 6
-cycle = 4
+cycle = 3
 
 date = list(ret.index)
 date_idx = list(range(len(ret.index)))

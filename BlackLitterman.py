@@ -10,7 +10,7 @@ def MeanVariance(ER, Sig, rf):
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
 
-    mu = 0.1 / 12
+    mu = 0.03 / 12
 
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
@@ -25,9 +25,23 @@ def MeanVariance(ER, Sig, rf):
 
     # portfolio weight when specify expected return
     alpha = ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
+
     w_mu = alpha * inv(Sig).dot(ER - rf * l)
+    w_mu = inv(Sig).dot(1/D*(B-mu*A)*l + 1/D*(mu*C-A)*ER)
     w_mu0 = 1 - alpha * (A - C * rf)
 
+    '''
+    x = np.arange(0, 0.02, 0.001)
+    y = []
+    for mu in x:
+        alpha = ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
+        w_mu = inv(Sig).dot(1/D*(B-mu*A)*l + 1/D*(mu*C-A)*ER)
+        y.append(w_mu.T.dot(Sig).dot(w_mu)[0])
+    y = np.array(y)
+    y = np.sqrt(y)
+    plt.plot(y, x)
+    plt.show()
+    '''
     return w_mkt, lam
 
 
@@ -102,7 +116,7 @@ def MeanVarianceConstraint(ER, Sig, rf):
     x0 /= x0.sum() # start with equally weighted
     bnds = tuple((0, None) for _ in x0)
     cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},    # sum to 1
-            {'type': 'ineq', 'fun': lambda x: 0.7 - sum(x[0:3]) / x.sum()}) # equity limit
+            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()}) # equity limit
     options={'disp':False, 'maxiter':1000, 'ftol':1e-20}
 
 

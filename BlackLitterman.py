@@ -11,7 +11,7 @@ def MeanVariance(ER, Sig, rf):
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
 
-    mu = 0.4 / 12
+    mu = 0.3 / 12
 
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
@@ -46,14 +46,14 @@ def MeanVariance(ER, Sig, rf):
     return w_mu, lam
 
 
-def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q):
+def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
 
     Sig = np.array(Sig)
     w_blInput = np.array(w_blInput).reshape((-1, 1))
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
-    Pi = 6 * Sig.dot(w_blInput)
+    Pi = 0.01 * Sig.dot(w_blInput)
     #Pi = np.array(ER).reshape((-1, 1))
 
     Omeg = np.diag((P.dot(Sig).dot(P.T) * tau).diagonal())
@@ -71,7 +71,11 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q):
     # New mean variance analysis
     w_BL, lam_BL = MeanVariance(ER_BL, Sig_BL, rf)  # new weight
     #w_BL = MeanVarianceConstraint(ER_BL, Sig_BL, rf)  # new weight
-    #w_BL = risk_parity_weight()
+
+    target = [0.7, 0.198, 0.1, 0.002]  # target risk contribution of equity, bond, alternative, liquidity
+    equity = 0.8  # equity proportion limit
+    liquidity_interval = (0.05, 0.1)  # liquidity proportion interval
+    w_BL = np.array(risk_parity_weight(Sig_BL, target, equity, liquidity_interval))
     w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf) # 100 confidence weight
 
     '''

@@ -75,7 +75,7 @@ for d in trade_idx:
 
 
     w_mkt, lam_mkt = MeanVariance(ER, Sig, rf)
-    w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q)
+    w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q, cov)
     risk_contribution_bl = RiskContribution(w_BL, cov)
 
     if output:

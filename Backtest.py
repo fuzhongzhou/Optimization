@@ -20,7 +20,7 @@ from RiskParity import risk_parity_weight, standardize, RiskContribution
 def maximum_drawdown(cumulative_value):
     max_return = np.fmax.accumulate(cumulative_value)
     maximum_drawdown = np.min((cumulative_value - max_return)/max_return)
-    return maximum_drawdown
+    return -maximum_drawdown
 
 def sharpe_ratio(cumulative_value, risk_free=0, cycle=12):
     returns = (cumulative_value - cumulative_value.shift(1))/cumulative_value.shift(1)[1:]

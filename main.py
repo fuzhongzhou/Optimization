@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import BlackLitterman as BL
 import RiskParity as RP
+from numpy import exp
 from BlackLitterman import BlackLitterman, MeanVariance, MeanVarianceConstraint
 from RiskParity import risk_parity_weight, standardize, RiskContribution
 from Backtest import back_test
@@ -74,18 +75,17 @@ for d in trade_idx:
     w_riskparity = risk_parity_weight(cov, target, equity, liquidity_interval)
     risk_contribution = RiskContribution(w_riskparity, cov)
 
+    w_mkt, lam_mkt = MeanVariance(ER, Sig, rf, mu=0.3/12)
+    w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q, cov)
+    #w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, cov, lam_mkt, rf, tau, P, Q, cov)
+    risk_contribution_bl = RiskContribution(w_BL, cov)
+
     if output:
         print("risk parity weight")
         print(w_riskparity)
         print("risk parity risk contribution")
         print(risk_contribution)
 
-
-    w_mkt, lam_mkt = MeanVariance(ER, Sig, rf)
-    w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q, cov)
-    risk_contribution_bl = RiskContribution(w_BL, cov)
-
-    if output:
         print("black litterman weight")
         print(w_BL)
         print("black litterman implied confidence")

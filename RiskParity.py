@@ -17,7 +17,7 @@ def risk_parity_weight(cov_mat, risk_prop, equity_prop, liquidity):
     #WARNING: the following part needs to be customized manually
     #1. delta_risk in objfun(x), need to be adjusted with respect to the distribution for type of funds and corresbonding target
     #2. cons, need to be adjusted with respect to the distribution for equity funds, alternative and liquidity
-    sigma = np.matrix(cov_mat.values)
+    sigma = np.array(cov_mat)
 
     def objfun(x):
         tmp = (sigma * np.matrix(x).T).A1
@@ -39,7 +39,7 @@ def risk_parity_weight(cov_mat, risk_prop, equity_prop, liquidity):
 
     # Optimization
     res = minimize(objfun, x0, bounds=bnds, constraints=cons, method='SLSQP', options=options)
-    wts = pd.Series(index=cov_mat.index, data=res['x'])
+    wts = np.array(res['x'])
     return wts / wts.sum() * 1.0
 
 

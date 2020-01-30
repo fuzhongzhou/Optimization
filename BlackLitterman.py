@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 from RiskParity import risk_parity_weight
 
 
-def MeanVariance(ER, Sig, rf):
+def MeanVariance(ER, Sig, rf, mu = 0.3/12):
 
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
-
-    mu = 0.3 / 12
 
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
@@ -53,10 +51,10 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
-    Pi = 0.01 * Sig.dot(w_blInput)
+    Pi = 1 * Sig.dot(w_blInput)
     #Pi = np.array(ER).reshape((-1, 1))
 
-    Omeg = np.diag((P.dot(Sig).dot(P.T) * tau).diagonal())
+    Omeg = np.diag((P.dot(Sig).dot(P.T) * 0.0001).diagonal())
 
     ER_BL_1 = inv(tau * Sig) + P.T.dot(inv(Omeg)).dot(P)
     ER_BL_2 = inv(tau * Sig).dot(Pi) + P.T.dot(inv(Omeg)).dot(Q)
@@ -70,12 +68,12 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
 
     # New mean variance analysis
     w_BL, lam_BL = MeanVariance(ER_BL, Sig_BL, rf)  # new weight
-    #w_BL = MeanVarianceConstraint(ER_BL, Sig_BL, rf)  # new weight
+    w_BL = MeanVarianceConstraint(ER_BL, Sig_BL, rf)  # new weight
 
     target = [0.7, 0.198, 0.1, 0.002]  # target risk contribution of equity, bond, alternative, liquidity
     equity = 0.8  # equity proportion limit
     liquidity_interval = (0.05, 0.1)  # liquidity proportion interval
-    w_BL = np.array(risk_parity_weight(Sig_BL, target, equity, liquidity_interval))
+    #w_BL = np.array(risk_parity_weight(Sig_BL, target, equity, liquidity_interval))
     w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf) # 100 confidence weight
 
     '''
@@ -113,25 +111,34 @@ def MeanVarianceConstraint(ER, Sig, rf):
     mu_mkt = ER.T.dot(w_mkt)
     lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
 
+    mu = 0.5 / 12
     # object function (use unconstraint lam)
+    '''
     def objfunc(x):
         x = np.array(x).T
         l = np.ones(shape=(x.shape[0], 1))
         return -(x.T.dot(ER - rf * l) - lam * x.T.dot(Sig).dot(x) / 2)
-
+    '''
+    def objfunc(x):
+        x = np.array(x).T
+        l = np.ones(shape=(x.shape[0], 1))
+        return x.T.dot(Sig).dot(x) / 2
     # params of optimizer
     x0 = np.ones(ER.shape)
     x0 /= x0.sum() # start with equally weighted
     bnds = tuple((0, None) for _ in x0)
     cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},    # sum to 1
             {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()}) # equity limit
+
+    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},  # sum to 1
+            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()},
+            {'type': 'eq', 'fun': lambda x: x.T.dot(ER)  - mu})  # equity limit
     options={'disp':False, 'maxiter':1000, 'ftol':1e-20}
 
 
     re = minimize(objfunc, x0, bounds=bnds, constraints=cons, method='SLSQP', options=options)
-    #print(re.x)
-    wts = re.x
-    return re.x
+    wts = np.array(re.x)
+    return wts
 
     '''
     updating:

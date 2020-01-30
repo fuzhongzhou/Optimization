@@ -45,6 +45,4 @@ def GetP_Q(t, cycle):
     
     #P.dot(expected_return) = Q + error
     return P, Q
-    
-GetP_Q(20, 12)
 

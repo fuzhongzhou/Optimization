@@ -12,15 +12,18 @@ pool = pool.fillna(pool.mean())
 for i in pool.columns:
     pool[i] = standardize(pool[i])
 pool.head()
-ret = (pool_raw / pool_raw.shift(1) - 1)[1:]
+ret = (pool_raw / pool_raw.shift(1) - 1)
 n = pool_raw.shape[1]
 
 #####################
 win = 18
 winv = 6
 cycle = 4
-date = list(range(len(ret.index)))[win:]
-trade_date = date[::cycle]
+
+date = list(ret.index)
+date_idx = list(range(len(ret.index)))
+trade_date = date[win::cycle]
+trade_idx = date_idx[win::cycle]
 
 weight = pd.DataFrame(columns=ret.columns, index=trade_date)
 
@@ -29,12 +32,12 @@ weight = pd.DataFrame(columns=ret.columns, index=trade_date)
 output = 0
 
 
-for d in trade_date:
+for d in trade_idx:
     print(d)
-    cov = pool.iloc[d-win:d, :].cov()
-    Sig = ret.iloc[d-win:d, :].cov()
+    cov = pool.iloc[d-win+1:d+1, :].cov()
+    Sig = ret.iloc[d-win+1:d+1, :].cov()
     # Sig = cov.copy()
-    ER = ret.iloc[d-win:d, :].mean()  # / ret.std()
+    ER = ret.iloc[d-win+1:d+1, :].mean()  # / ret.std()
 
     ################ Discretionary Parameters
     # risk parity params
@@ -55,7 +58,7 @@ for d in trade_date:
 
     Q = []
     for i in range(n):
-        Q.append([ret.iloc[d-winv:d, i].mean()])
+        Q.append([ret.iloc[d-winv+1:d+1, i].mean()])
 
     ################ Time for models
 
@@ -81,6 +84,13 @@ for d in trade_date:
         print("black litterman risk contribution")
         print(risk_contribution_bl)
 
-    weight.loc[d] = w_BL[:, 0]
+    weight.loc[date[d]] = w_BL[:, 0]
 weight.to_csv('weight.csv')
+
+
+
+eq_weight = pd.DataFrame(columns=ret.columns, index=trade_date)
+eq_weight = eq_weight.fillna(1 / 5)
+eq_weight.to_csv("eq_weight.csv")
+
     #print(MeanVarianceConstraint(Sig, ER, rf, lam_mkt))

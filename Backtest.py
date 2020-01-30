@@ -18,15 +18,15 @@ from RiskParity import risk_parity_weight, standardize, RiskContribution
 
 
 pool = pd.read_csv("pool.csv")
-pool["Date"] = pd.to_datetime(pool["Date"])
+#pool["Date"] = pd.to_datetime(pool["Date"])
 pool = pool.set_index("Date")
 pool.head()
 
 
 
-def back_test(start, end, commission_fee):
+def back_test(df, start, end, commission_fee):
     initial_capital = 10000
-    cycle = 12 #transfer frequency, yearly: 12, quaterly: 4
+    cycle = 4 #transfer frequency, yearly: 12, quaterly: 4
     
     def one_period_trade(t, capital, weight):
         weight = np.array(weight)                                                #target weight
@@ -51,13 +51,13 @@ def back_test(start, end, commission_fee):
     weight_list = [np.array([0, 0, 0, 0, 0])]
     position_list = [np.array([0, 0, 0, 0, 0])] 
     
-    while(t<end):
+    while t < end:
         '''
         Hundreds of codes for strategy that generates the new weight
         '''
         
         #WARNING:just for test, check using 5th fund price
-        weight = [0, 0, 0, 0, 1]
+        weight = df.loc[date[t]]
         
         
         wealth = one_period_trade(t, wealth, weight)
@@ -70,28 +70,26 @@ def back_test(start, end, commission_fee):
 # In[55]:
 
 
+
+
+weight = pd.read_csv('weight.csv', index_col=0)
+eq_weight = pd.read_csv('eq_weight.csv', index_col=0)
+date = np.array(pool.index)
+date_idx = np.array(range(len(pool.index)))
+
+trade_date = np.array(weight.index)
+trade_idx = np.array([np.argwhere(date == i)[0, 0] for i in trade_date])
+
+
 commission_fee = 0.0002
-start = 0            #start date, use the first ordinal number of date index
-end = len(pool)-1    #end date, use the last ordinal number date index
-result = back_test(start, end, commission_fee)
+start = trade_idx[0]            #start date, use the first ordinal number of date index
+end = trade_idx[-1]  #end date, use the last ordinal number date index
+result_eq = back_test(eq_weight, start, end, commission_fee)
+result = back_test(weight, start, end, commission_fee)
+
+plt.plot(result_eq)
 plt.plot(result)
+plt.legend(['eq', 're'])
+plt.show()
 
-
-
-
-# read data
-pool_raw = pd.read_csv("pool.csv", encoding='utf-8', index_col=0)[:-1]
-pool = pool_raw.copy()
-pool = pool.fillna(pool.mean())
-for i in pool.columns:
-    pool[i] = standardize(pool[i])
-pool.head()
-ret = (pool_raw / pool_raw.shift(1) - 1)[1:]
-n = pool_raw.shape[1]
-
-#####################
-win = 18
-winv = 6
-cycle = 4
-date = list(range(len(ret.index)))[win:]
-trade_date = date[::cycle]
+pass

@@ -7,6 +7,9 @@ from numpy import exp
 from BlackLitterman import BlackLitterman, MeanVariance, MeanVarianceConstraint
 from RiskParity import risk_parity_weight, standardize, RiskContribution
 from Backtest import back_test
+plt.style.use('ggplot')
+import matplotlib.dates as mdates
+import datetime
 
 # read data
 pool_raw = pd.read_csv("pool.csv", encoding='utf-8', index_col=0)[:-1]
@@ -113,10 +116,21 @@ result_rp = back_test(weight_rp, start, end, commission_fee)
 result_mv = back_test(weight_mv, start, end, commission_fee)
 result_bl = back_test(weight, start, end, commission_fee)
 
-plt.plot(result_eq)
-plt.plot(result_rp)
-plt.plot(result_mv)
-plt.plot(result_bl)
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+ax.plot(result_eq, label='Equally weighted')
+ax.plot(result_rp, label='Risk parity')
+ax.plot(result_mv, label='Mean variance')
+ax.plot(result_bl, label='Risk adjusted black litterman')
 #plt.yticks(np.array(result_bl.index))
-plt.legend(['equally weighted', 'risk parity', 'mean variance', 'black litterman'])
+ax.legend()
+
+date_str = list(result_bl.index)
+date_tick = [datetime.datetime.strptime(str(i), '%m/%d/%Y') for i in list(result_bl.index)]
+ax.set_xticks(date_str)
+#ax.xaxis_date("%Y-%m-%d")
+#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+#ax.autofmt_xdate()
 plt.show()

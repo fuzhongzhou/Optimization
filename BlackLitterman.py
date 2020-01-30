@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from RiskParity import risk_parity_weight
 
 
+
 def MeanVariance(ER, Sig, rf, mu = 0.3/12):
 
     ER = np.array(ER).reshape((-1, 1))

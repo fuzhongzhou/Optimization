@@ -35,7 +35,7 @@ def back_test(df, start, end, commission_fee):
     date_idx = np.array(range(len(pool.index)))
 
 
-    initial_capital = 10000
+    initial_capital = 100
     cycle = 4 #transfer frequency, yearly: 12, quaterly: 4
     
     def one_period_trade(t, capital, weight):

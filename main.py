@@ -6,10 +6,14 @@ import RiskParity as RP
 from numpy import exp
 from BlackLitterman import BlackLitterman, MeanVariance, MeanVarianceConstraint
 from RiskParity import risk_parity_weight, standardize, RiskContribution
+<<<<<<< HEAD
 from Backtest import back_test
 plt.style.use('ggplot')
 import matplotlib.dates as mdates
 import datetime
+=======
+from Backtest import back_test, sharpe_ratio, maximum_drawdown
+>>>>>>> 1a1fb008a3d620ce4029eb768121d493404819d2
 
 # read data
 pool_raw = pd.read_csv("pool.csv", encoding='utf-8', index_col=0)[:-1]
@@ -116,12 +120,28 @@ result_rp = back_test(weight_rp, start, end, commission_fee)
 result_mv = back_test(weight_mv, start, end, commission_fee)
 result_bl = back_test(weight, start, end, commission_fee)
 
+<<<<<<< HEAD
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 ax.plot(result_eq, label='Equally weighted')
 ax.plot(result_rp, label='Risk parity')
 ax.plot(result_mv, label='Mean variance')
 ax.plot(result_bl, label='Risk adjusted black litterman')
+=======
+names = ['equally weighted', 'risk parity', 'mean variance', 'black litterman']
+results = [result_eq, result_rp, result_mv, result_bl]
+table = pd.DataFrame(columns = ["SharpRatio", "MaximumDrawdown"])
+for name, result in zip(names, results):
+    SR = sharpe_ratio(result)
+    MD = maximum_drawdown(result)
+    table.loc[name] = [SR, MD]
+print(table)
+
+plt.plot(result_eq)
+plt.plot(result_rp)
+plt.plot(result_mv)
+plt.plot(result_bl)
+>>>>>>> 1a1fb008a3d620ce4029eb768121d493404819d2
 #plt.yticks(np.array(result_bl.index))
 ax.legend()
 

@@ -17,14 +17,19 @@ from RiskParity import risk_parity_weight, standardize, RiskContribution
 # In[29]:
 
 
-pool = pd.read_csv("pool.csv")
-#pool["Date"] = pd.to_datetime(pool["Date"])
-pool = pool.set_index("Date")
-pool.head()
+
 
 
 
 def back_test(df, start, end, commission_fee):
+    pool = pd.read_csv("pool.csv")
+    # pool["Date"] = pd.to_datetime(pool["Date"])
+    pool = pool.set_index("Date")
+    pool.head()
+    date = np.array(pool.index)
+    date_idx = np.array(range(len(pool.index)))
+
+
     initial_capital = 10000
     cycle = 4 #transfer frequency, yearly: 12, quaterly: 4
     
@@ -59,7 +64,6 @@ def back_test(df, start, end, commission_fee):
         #WARNING:just for test, check using 5th fund price
         weight = df.loc[date[t]]
         
-        
         wealth = one_period_trade(t, wealth, weight)
         cumulative_value[pool.index[t]] = wealth
         t += cycle
@@ -70,26 +74,30 @@ def back_test(df, start, end, commission_fee):
 # In[55]:
 
 
+if __name__ == '__main__':
+    pool = pd.read_csv("pool.csv")
+    # pool["Date"] = pd.to_datetime(pool["Date"])
+    pool = pool.set_index("Date")
+    pool.head()
+
+    weight = pd.read_csv('weight.csv', index_col=0)
+    eq_weight = pd.read_csv('eq_weight.csv', index_col=0)
+    date = np.array(pool.index)
+    date_idx = np.array(range(len(pool.index)))
+
+    trade_date = np.array(weight.index)
+    trade_idx = np.array([np.argwhere(date == i)[0, 0] for i in trade_date])
 
 
-weight = pd.read_csv('weight.csv', index_col=0)
-eq_weight = pd.read_csv('eq_weight.csv', index_col=0)
-date = np.array(pool.index)
-date_idx = np.array(range(len(pool.index)))
+    commission_fee = 0.0002
+    start = trade_idx[0]            #start date, use the first ordinal number of date index
+    end = trade_idx[-1]  #end date, use the last ordinal number date index
+    result_eq = back_test(eq_weight, start, end, commission_fee)
+    result = back_test(weight, start, end, commission_fee)
 
-trade_date = np.array(weight.index)
-trade_idx = np.array([np.argwhere(date == i)[0, 0] for i in trade_date])
+    plt.plot(result_eq)
+    plt.plot(result)
+    plt.legend(['eq', 're'])
+    plt.show()
 
-
-commission_fee = 0.0002
-start = trade_idx[0]            #start date, use the first ordinal number of date index
-end = trade_idx[-1]  #end date, use the last ordinal number date index
-result_eq = back_test(eq_weight, start, end, commission_fee)
-result = back_test(weight, start, end, commission_fee)
-
-plt.plot(result_eq)
-plt.plot(result)
-plt.legend(['eq', 're'])
-plt.show()
-
-pass
+    pass

@@ -3,6 +3,7 @@ import pandas as pd
 from numpy.linalg import inv
 from scipy.optimize import minimize, LinearConstraint
 import matplotlib.pyplot as plt
+from RiskParity import risk_parity_weight
 
 
 def MeanVariance(ER, Sig, rf):
@@ -10,7 +11,7 @@ def MeanVariance(ER, Sig, rf):
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
 
-    mu = 0.03 / 12
+    mu = 0.4 / 12
 
     # compute market portfolio
     l = np.ones((Sig.shape[0], 1))
@@ -42,16 +43,17 @@ def MeanVariance(ER, Sig, rf):
     plt.plot(y, x)
     plt.show()
     '''
-    return w_mkt, lam
+    return w_mu, lam
 
 
-def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
+def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q):
 
     Sig = np.array(Sig)
     w_blInput = np.array(w_blInput).reshape((-1, 1))
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
+    Pi = np.array(ER).reshape((-1, 1))
 
     Omeg = np.diag((P.dot(Sig).dot(P.T) * tau).diagonal())
 
@@ -68,6 +70,7 @@ def BlackLitterman(w_blInput, Sig, lam, rf, tau, P, Q):
     # New mean variance analysis
     w_BL, lam_BL = MeanVariance(ER_BL, Sig_BL, rf)  # new weight
     #w_BL = MeanVarianceConstraint(ER_BL, Sig_BL, rf)  # new weight
+    #w_BL = risk_parity_weight()
     w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf) # 100 confidence weight
 
     '''
@@ -121,7 +124,7 @@ def MeanVarianceConstraint(ER, Sig, rf):
 
 
     re = minimize(objfunc, x0, bounds=bnds, constraints=cons, method='SLSQP', options=options)
-    print(re.x)
+    #print(re.x)
     wts = re.x
     return re.x
 

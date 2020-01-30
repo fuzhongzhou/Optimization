@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import BlackLitterman as BL
 import RiskParity as RP
 from BlackLitterman import BlackLitterman, MeanVariance, MeanVarianceConstraint
 from RiskParity import risk_parity_weight, standardize, RiskContribution
+from Backtest import back_test
 
 # read data
 pool_raw = pd.read_csv("pool.csv", encoding='utf-8', index_col=0)[:-1]
@@ -26,8 +28,8 @@ trade_date = date[win::cycle]
 trade_idx = date_idx[win::cycle]
 
 weight = pd.DataFrame(columns=ret.columns, index=trade_date)
-
-
+weight_rp = weight.copy(deep=True)
+weight_mv = weight.copy(deep=True)
 
 output = 0
 
@@ -46,8 +48,8 @@ for d in trade_idx:
     liquidity_interval = (0.05, 0.1)  # liquidity proportion interval
 
     # black litterman params
-    rf = 0.01 / 12
-    tau = 1 / win  # 1 / n, n is # of observation
+    rf = 0.0 / 12
+    tau = 0.01  # 1 / n, n is # of observation
 
     P = []
     for i in range(n):
@@ -73,7 +75,7 @@ for d in trade_idx:
 
 
     w_mkt, lam_mkt = MeanVariance(ER, Sig, rf)
-    w_BL, implied_confidence = BlackLitterman(w_riskparity, Sig, lam_mkt, rf, tau, P, Q)
+    w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q)
     risk_contribution_bl = RiskContribution(w_BL, cov)
 
     if output:
@@ -84,13 +86,29 @@ for d in trade_idx:
         print("black litterman risk contribution")
         print(risk_contribution_bl)
 
-    weight.loc[date[d]] = w_BL[:, 0]
+    weight.loc[date[d]] = w_BL.reshape((1, -1))
+    weight_rp.loc[date[d]] = np.array(w_riskparity)
+    weight_mv.loc[date[d]] = np.array(w_mkt).reshape((1, -1))
+
 weight.to_csv('weight.csv')
 
+weight_eq = pd.DataFrame(columns=ret.columns, index=trade_date)
+weight_eq = weight_eq.fillna(1 / 5)
+weight_eq.to_csv("eq_weight.csv")
 
 
-eq_weight = pd.DataFrame(columns=ret.columns, index=trade_date)
-eq_weight = eq_weight.fillna(1 / 5)
-eq_weight.to_csv("eq_weight.csv")
 
-    #print(MeanVarianceConstraint(Sig, ER, rf, lam_mkt))
+commission_fee = 0.0002
+start = trade_idx[0]            #start date, use the first ordinal number of date index
+end = trade_idx[-1]  #end date, use the last ordinal number date index
+result_eq = back_test(weight_eq, start, end, commission_fee)
+result_rp = back_test(weight_rp, start, end, commission_fee)
+result_mv = back_test(weight_mv, start, end, commission_fee)
+result_bl = back_test(weight, start, end, commission_fee)
+
+plt.plot(result_eq)
+plt.plot(result_rp)
+plt.plot(result_mv)
+plt.plot(result_bl)
+plt.legend(['equally weighted', 'risk parity', 'mean variance', 'black litterman'])
+plt.show()

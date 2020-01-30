@@ -33,6 +33,7 @@ weight_mv = weight.copy(deep=True)
 
 output = 0
 equity = 0.8
+liquidity_top = 0.1
 
 for d in trade_idx:
     print(d)
@@ -43,7 +44,7 @@ for d in trade_idx:
 
     ################ Discretionary Parameters
     # risk parity params
-    equity = 0.8 - 0.0125*cycle/12  # equity proportion limit
+    equity -= 0.0125*cycle/12  # equity proportion limit
     target_equity = (exp(equity)/2 - 0.2)*0.9
     target_alternative = (exp(equity)/2 - 0.2)*0.1
     target_bond = (1-(exp(equity)/2 - 0.2))*0.95

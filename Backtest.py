@@ -17,9 +17,14 @@ from RiskParity import risk_parity_weight, standardize, RiskContribution
 # In[29]:
 
 
+def maximum_drawdown(cumulative_value):
+    max_return = np.fmax.accumulate(cumulative_value)
+    maximum_drawdown = np.min((cumulative_value - max_return)/max_return)
+    return maximum_drawdown
 
-
-
+def sharpe_ratio(cumulative_value, risk_free=0, cycle=12):
+    returns = (cumulative_value - cumulative_value.shift(1))/cumulative_value.shift(1)[1:]
+    return np.mean(returns)/np.std(returns, ddof=1)*np.sqrt(12/cycle)
 
 def back_test(df, start, end, commission_fee):
     pool = pd.read_csv("pool.csv")
@@ -94,7 +99,10 @@ if __name__ == '__main__':
     end = trade_idx[-1]  #end date, use the last ordinal number date index
     result_eq = back_test(eq_weight, start, end, commission_fee)
     result = back_test(weight, start, end, commission_fee)
-
+    
+    print("Sharpe Ratio", sharpe_ratio(result))
+    print("Maximum Drawdown", maximum_drawdown(result))
+    
     plt.plot(result_eq)
     plt.plot(result)
     plt.legend(['eq', 're'])

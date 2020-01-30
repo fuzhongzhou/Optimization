@@ -53,7 +53,8 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q):
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
-    Pi = np.array(ER).reshape((-1, 1))
+    Pi = 6 * Sig.dot(w_blInput)
+    #Pi = np.array(ER).reshape((-1, 1))
 
     Omeg = np.diag((P.dot(Sig).dot(P.T) * tau).diagonal())
 

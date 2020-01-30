@@ -8,6 +8,10 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+import BlackLitterman as BL
+import RiskParity as RP
+from BlackLitterman import BlackLitterman, MeanVariance, MeanVarianceConstraint
+from RiskParity import risk_parity_weight, standardize, RiskContribution
 
 
 # In[29]:
@@ -71,3 +75,23 @@ start = 0            #start date, use the first ordinal number of date index
 end = len(pool)-1    #end date, use the last ordinal number date index
 result = back_test(start, end, commission_fee)
 plt.plot(result)
+
+
+
+
+# read data
+pool_raw = pd.read_csv("pool.csv", encoding='utf-8', index_col=0)[:-1]
+pool = pool_raw.copy()
+pool = pool.fillna(pool.mean())
+for i in pool.columns:
+    pool[i] = standardize(pool[i])
+pool.head()
+ret = (pool_raw / pool_raw.shift(1) - 1)[1:]
+n = pool_raw.shape[1]
+
+#####################
+win = 18
+winv = 6
+cycle = 4
+date = list(range(len(ret.index)))[win:]
+trade_date = date[::cycle]

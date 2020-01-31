@@ -37,6 +37,7 @@ trade_idx = date_idx[win::cycle]
 weight = pd.DataFrame(columns=ret.columns, index=trade_date)
 weight_rp = weight.copy(deep=True)
 weight_mv = weight.copy(deep=True)
+risk_contrib_bl = pd.DataFrame(columns=['equity', 'alternative', 'bond', 'liquidity'], index=trade_date)
 
 output = 0
 equity = 0.8
@@ -102,6 +103,7 @@ for d in trade_idx:
     weight.loc[date[d]] = w_BL.reshape((1, -1))
     weight_rp.loc[date[d]] = np.array(w_riskparity)
     weight_mv.loc[date[d]] = np.array(w_mkt).reshape((1, -1))
+    risk_contrib_bl.loc[date[d]] = np.array(RiskContribution(w_BL, Sig)).reshape((1, -1))
 
 weight.to_csv('weight.csv')
 
@@ -119,7 +121,8 @@ result_rp = back_test(weight_rp, start, end, commission_fee)
 result_mv = back_test(weight_mv, start, end, commission_fee)
 result_bl = back_test(weight, start, end, commission_fee)
 
-
+#risk_contrib_bl.plot.bar(stacked=True)
+#plt.show()
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 ax.plot(result_eq, label='Equally weighted')

@@ -121,8 +121,8 @@ result_rp = back_test(weight_rp, start, end, commission_fee)
 result_mv = back_test(weight_mv, start, end, commission_fee)
 result_bl = back_test(weight, start, end, commission_fee)
 
-#risk_contrib_bl.plot.bar(stacked=True)
-#plt.show()
+risk_contrib_bl.plot.bar(stacked=True)
+plt.show()
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 ax.plot(result_eq, label='Equally weighted')

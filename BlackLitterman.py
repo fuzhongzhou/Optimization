@@ -112,7 +112,7 @@ def MeanVarianceConstraint(ER, Sig, rf):
     mu_mkt = ER.T.dot(w_mkt)
     lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
 
-    mu = 0.5 / 12
+    mu = 0.2 / 12
     # object function (use unconstraint lam)
     '''
     def objfunc(x):

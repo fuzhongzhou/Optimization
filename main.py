@@ -24,7 +24,7 @@ pool.head()
 ret = (pool_raw / pool_raw.shift(1) - 1)
 n = pool_raw.shape[1]
 
-#####################
+
 win = 18
 winv = 6
 cycle = 3
@@ -49,7 +49,7 @@ for d in trade_idx:
     # Sig = cov.copy()
     ER = ret.iloc[d-win+1:d+1, :].mean()  # / ret.std()
 
-    ################ Discretionary Parameters
+    # Discretionary Parameters
     # risk parity params
     equity -= 0.0125*cycle/12  # equity proportion limit
     target_equity = (exp(equity)/2 - 0.2)*0.9
@@ -58,7 +58,8 @@ for d in trade_idx:
     target_liquidity = (1-(exp(equity)/2 - 0.2))*0.05
     liquidity_top += 0.0025*cycle/12
     liquidity_bot = liquidity_top/2
-    target = [target_equity, target_alternative, target_bond, target_liquidity]  # target risk contribution of equity, bond, alternative, liquidity
+    target = [target_equity, target_alternative, target_bond, target_liquidity]
+    # target risk contribution of equity, bond, alternative, liquidity
     liquidity_interval = (liquidity_bot, liquidity_top)  # liquidity proportion interval
 
     # black litterman params
@@ -76,14 +77,13 @@ for d in trade_idx:
     for i in range(n):
         Q.append([ret.iloc[d-winv+1:d+1, i].mean()])
 
-    ################ Time for models
-
+    # Time for models
     w_riskparity = risk_parity_weight(cov, target, equity, liquidity_interval)
     risk_contribution = RiskContribution(w_riskparity, cov)
 
     w_mkt, lam_mkt = MeanVariance(ER, Sig, rf, mu=0.3/12)
     w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, Sig, lam_mkt, rf, tau, P, Q, cov)
-    #w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, cov, lam_mkt, rf, tau, P, Q, cov)
+    # w_BL, implied_confidence = BlackLitterman(w_riskparity, ER, cov, lam_mkt, rf, tau, P, Q, cov)
     risk_contribution_bl = RiskContribution(w_BL, cov)
 
     if output:
@@ -110,15 +110,13 @@ weight_eq = weight_eq.fillna(1 / 5)
 weight_eq.to_csv("eq_weight.csv")
 
 
-
 commission_fee = 0.0002
-start = trade_idx[0]            #start date, use the first ordinal number of date index
-end = trade_idx[-1]  #end date, use the last ordinal number date index
+start = trade_idx[0]        # start date, use the first ordinal number of date index
+end = trade_idx[-1]     # end date, use the last ordinal number date index
 result_eq = back_test(weight_eq, start, end, commission_fee)
 result_rp = back_test(weight_rp, start, end, commission_fee)
 result_mv = back_test(weight_mv, start, end, commission_fee)
 result_bl = back_test(weight, start, end, commission_fee)
-
 
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 6))

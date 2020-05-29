@@ -1,14 +1,9 @@
 import numpy as np
-import pandas as pd
 from numpy.linalg import inv
-from scipy.optimize import minimize, LinearConstraint
 import matplotlib.pyplot as plt
-from RiskParity import risk_parity_weight
 
 
-
-def MeanVariance(ER, Sig, rf, mu = 0.3/12):
-
+def MeanVariance(ER, Sig, rf, mu=0.3 / 12, plot=False):
     ER = np.array(ER).reshape((-1, 1))
     Sig = np.array(Sig)
 
@@ -17,43 +12,78 @@ def MeanVariance(ER, Sig, rf, mu = 0.3/12):
     A = l.T.dot(inv(Sig)).dot(ER)
     B = ER.T.dot(inv(Sig)).dot(ER)
     C = l.T.dot(inv(Sig)).dot(l)
-    D = B * C - A**2
-    H = B - 2 * rf * A + rf**2 * C
+    D = B * C - A ** 2
+    H = B - 2 * rf * A + rf ** 2 * C
     w_mkt = inv(Sig).dot(ER - rf * l) / (A - C * rf)
     mu_mkt = ER.T.dot(w_mkt)
-    lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(w_mkt) #1 / ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
+    lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(
+        w_mkt)
 
     # portfolio weight when specify expected return
     alpha = ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
 
     w_mu = alpha * inv(Sig).dot(ER - rf * l)
-    w_mu = inv(Sig).dot(1/D*(B-mu*A)*l + 1/D*(mu*C-A)*ER)
+    w_mu = inv(Sig).dot(1 / D * (B - mu * A) * l + 1 / D * (mu * C - A) * ER)
     w_mu0 = 1 - alpha * (A - C * rf)
 
-    '''
-    x = np.arange(0, 0.02, 0.001)
-    y = []
-    for mu in x:
-        alpha = ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
-        w_mu = inv(Sig).dot(1/D*(B-mu*A)*l + 1/D*(mu*C-A)*ER)
-        y.append(w_mu.T.dot(Sig).dot(w_mu)[0])
-    y = np.array(y)
-    y = np.sqrt(y)
-    plt.plot(y, x)
-    plt.show()
-    '''
+    if plot:
+        x = np.arange(0, 0.02, 0.001)
+        y = []
+        for mu in x:
+            alpha = ((mu - rf) / (ER - rf * l).T.dot(inv(Sig)).dot(ER - rf * l))
+            w_mu = inv(Sig).dot(1 / D * (B - mu * A) * l + 1 / D * (mu * C - A) * ER)
+            y.append(w_mu.T.dot(Sig).dot(w_mu)[0])
+        y = np.array(y)
+        y = np.sqrt(y)
+        plt.plot(y, x)
+        plt.show()
+
     return w_mu, lam
 
 
-def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
+def MeanVarianceConstraint(ER, Sig, rf):
+    from scipy.optimize import minimize
 
+    # compute the unconstraint market portfolio and lam
+    l = np.ones(shape=(ER.shape[0], 1))
+    A = l.T.dot(inv(Sig)).dot(ER)
+    C = l.T.dot(inv(Sig)).dot(l)
+    w_mkt = inv(Sig).dot(ER - rf * l) / (A - C * rf)
+    mu_mkt = ER.T.dot(w_mkt)
+    lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
+
+    mu = 0.5 / 12
+    # object function (use unconstraint lam)
+    def objfunc(x):
+        x = np.array(x).T
+        l = np.ones(shape=(x.shape[0], 1))
+        return x.T.dot(Sig).dot(x) / 2
+
+    # params of optimizer
+    x0 = np.ones(ER.shape)
+    x0 /= x0.sum()  # start with equally weighted
+    bnds = tuple((0, None) for _ in x0)
+    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},  # sum to 1
+            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()})  # equity limit
+
+    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},  # sum to 1
+            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()},
+            {'type': 'eq', 'fun': lambda x: x.T.dot(ER) - mu})  # equity limit
+    options = {'disp': False, 'maxiter': 1000, 'ftol': 1e-20}
+
+    re = minimize(objfunc, x0, bounds=bnds, constraints=cons, method='SLSQP', options=options)
+    wts = np.array(re.x)
+    return wts
+
+
+def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
     Sig = np.array(Sig)
     w_blInput = np.array(w_blInput).reshape((-1, 1))
 
     # Computation
     Pi = lam * Sig.dot(w_blInput)
     Pi = 1 * Sig.dot(w_blInput)
-    #Pi = np.array(ER).reshape((-1, 1))
+    # Pi = np.array(ER).reshape((-1, 1))
 
     Omeg = np.diag((P.dot(Sig).dot(P.T) * 0.0001).diagonal())
 
@@ -66,7 +96,6 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
     ER_BL100 = Pi + tau * Sig.dot(P.T).dot(inv(P.dot(tau * Sig).dot(P.T))).dot(Q - P.dot(Pi))
     Sig_BL100 = tau * Sig
 
-
     # New mean variance analysis
     w_BL, lam_BL = MeanVariance(ER_BL, Sig_BL, rf)  # new weight
     w_BL = MeanVarianceConstraint(ER_BL, Sig_BL, rf)  # new weight
@@ -74,22 +103,11 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
     target = [0.7, 0.198, 0.1, 0.002]  # target risk contribution of equity, bond, alternative, liquidity
     equity = 0.8  # equity proportion limit
     liquidity_interval = (0.05, 0.1)  # liquidity proportion interval
-    #w_BL = np.array(risk_parity_weight(Sig_BL, target, equity, liquidity_interval))
-    w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf) # 100 confidence weight
+    # w_BL = np.array(risk_parity_weight(Sig_BL, target, equity, liquidity_interval))
+    w_BL100, lam_BL100 = MeanVariance(ER_BL100, Sig_BL100, rf)  # 100 confidence weight
 
-    '''
-    remain to be completed
-    # tiltering methods
-    if 0:
-        tilt = (w_BL100 - w_blInput) * confidence
-        w_tilt = w_blInput + tilt
-        for i in range(P.shape[0]):
-            ER_tmp = Pi + tau * Sig.dot(P[i].T).dot(inv(P[i].dot(tau * Sig).dot(P[i].T))).dot(Q[i] - P[i].dot(Pi))
-            w_tmp = inv(lam_mkt * Sig).dot(ER_tmp)
-            departure_tmp = w_tmp - w_blInput
-    '''
-    #w_BL = inv(lam * Sig_BL).dot(ER_BL)
-    #w_BL100 = inv(lam * Sig_BL100).dot(ER_BL100)
+    # w_BL = inv(lam * Sig_BL).dot(ER_BL)
+    # w_BL100 = inv(lam * Sig_BL100).dot(ER_BL100)
 
     implied_confidence = np.abs(w_BL - w_blInput).sum() / np.abs(w_BL100 - w_blInput).sum()
 
@@ -100,50 +118,5 @@ def BlackLitterman(w_blInput, ER, Sig, lam, rf, tau, P, Q, cov):
 
     return w_BL, implied_confidence
 
-
-def MeanVarianceConstraint(ER, Sig, rf):
-    from scipy.optimize import minimize, LinearConstraint
-
-    # compute the unconstraint market portfolio and lam
-    l = np.ones(shape=(ER.shape[0], 1))
-    A = l.T.dot(inv(Sig)).dot(ER)
-    C = l.T.dot(inv(Sig)).dot(l)
-    w_mkt = inv(Sig).dot(ER - rf * l) / (A - C * rf)
-    mu_mkt = ER.T.dot(w_mkt)
-    lam = (mu_mkt - rf) / w_mkt.T.dot(Sig).dot(w_mkt)
-
-    mu = 0.5 / 12
-    # object function (use unconstraint lam)
-    '''
-    def objfunc(x):
-        x = np.array(x).T
-        l = np.ones(shape=(x.shape[0], 1))
-        return -(x.T.dot(ER - rf * l) - lam * x.T.dot(Sig).dot(x) / 2)
-    '''
-    def objfunc(x):
-        x = np.array(x).T
-        l = np.ones(shape=(x.shape[0], 1))
-        return x.T.dot(Sig).dot(x) / 2
-    # params of optimizer
-    x0 = np.ones(ER.shape)
-    x0 /= x0.sum() # start with equally weighted
-    bnds = tuple((0, None) for _ in x0)
-    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},    # sum to 1
-            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()}) # equity limit
-
-    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1},  # sum to 1
-            {'type': 'ineq', 'fun': lambda x: 0.8 - sum(x[0:3]) / x.sum()},
-            {'type': 'eq', 'fun': lambda x: x.T.dot(ER)  - mu})  # equity limit
-    options={'disp':False, 'maxiter':1000, 'ftol':1e-20}
-
-
-    re = minimize(objfunc, x0, bounds=bnds, constraints=cons, method='SLSQP', options=options)
-    wts = np.array(re.x)
-    return wts
-
-    '''
-    updating:
-    need to add constraints to weight of risky assets, and form a mean variance analysis
-    '''
 
 
